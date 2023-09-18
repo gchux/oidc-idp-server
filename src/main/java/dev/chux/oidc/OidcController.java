@@ -113,10 +113,8 @@ public class OidcController {
         m.put("grant_types_supported", Arrays.asList("authorization_code", "implicit")); //OPTIONAL
         m.put("subject_types_supported", Collections.singletonList("public")); // REQUIRED
         m.put("id_token_signing_alg_values_supported", Arrays.asList("RS256")); // REQUIRED
-        //m.put("id_token_signing_alg_values_supported", Arrays.asList("RS256", "none")); // REQUIRED
         m.put("claims_supported", Arrays.asList("sub", "iss", "name", "family_name", "given_name", "preferred_username", "email"));
         m.put("code_challenge_methods_supported", Arrays.asList("RS256")); // PKCE support advertised
-        //m.put("code_challenge_methods_supported", Arrays.asList("plain", "S256")); // PKCE support advertised
         return ResponseEntity.ok().body(m);
     }
 
@@ -127,9 +125,7 @@ public class OidcController {
     @CrossOrigin
     public ResponseEntity<String> jwks(HttpServletRequest req) {
         log.info("called {}", JWKS_ENDPOINT);
-        //final String jwks = publicJWKSet.toString();
-        //final String jwks = publicJWKSet.toString().replaceAll("_on7PV8_", "");
-        final String jwks = "{\"keys\":[{\"kty\":\"RSA\",\"alg\":\"RS256\",\"use\":\"sig\",\"kid\":\"rsa1\",\"n\":\"x6QYjcJVU6nHw75plFWckVJ9PcBtguUBnV5fWaf6XVKnlpoXDMc6k-E-Wvtq7GtxuqdT-bdlc-yqKq-nthmVBFQxb4odQmhBW03yAvziMLetZ6jZ-HCp1tTJ7X7luxPuqZ2ql812gnF_ngLLe_YyG1WdVevZIWnM8Tx0AFBKGRM\",\"e\":\"AQAB\"}]}";
+        final String jwks = publicJWKSet.toString();
         return ResponseEntity.ok().body(jwks);
     }
 
