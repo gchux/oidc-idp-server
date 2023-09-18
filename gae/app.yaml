@@ -1,0 +1,18 @@
+runtime: java17 # or another supported runtime
+service: oidc-idp
+entrypoint: java -jar app.jar
+env_variables:
+    OIDC_ALLOW_ALL: "true"
+    OIDC_ADD_ALL: "true"
+    OIDC_DOMAIN: "oidc.app"
+    OIDC_ISSUER: "https://oidc-idp-dot-chux-testing.wn.r.appspot.com"
+    OIDC_CLIENT_ID: "oidc-test-knbu5"
+    OIDC_CLIENT_SECRET: "XWcEm9ZuvvQuL7mm7PIR2fjirzJT37XqKnVQxSopy8aL0vlfXC"
+    OIDC_REDIRECTS: "https://chux-firebase-testing.firebaseapp.com/__/auth/handler"
+    OIDC_ENFORCE_CLIENT_ID: "false"
+    OIDC_ENFORCE_CLIENT_SECRET: "false"
+    OIDC_ENFORCE_REDIRECT: "false"
+    OIDC_ENFORCE_DOMAIN: "false"
+automatic_scaling:
+  target_cpu_utilization: 0.80
+  max_instances: 1

@@ -1,0 +1,22 @@
+server:
+  port: 8080
+oidc:
+  allowAll: ${OIDC_ALLOW_ALL:true}
+  addAll: ${OIDC_ADD_ALL:true}
+  issuer: ${OIDC_ISSUER:http://localhost}
+  domain: ${OIDC_DOMAIN:oidc.app}
+  tokenExpirationSeconds: 3600
+  clientId: ${OIDC_CLIENT_ID:test}
+  secret: ${OIDC_CLIENT_SECRET:test}
+  redirects: ${OIDC_REDIRECT:http://localhost/__/auth/handler}
+  enforceClientId: ${OIDC_ENFORCE_CLIENT_ID:false}
+  enforceSecret: ${OIDC_ENFORCE_CLIENT_SECRET:false}
+  enforceRedirect: ${OIDC_ENFORCE_REDIRECT:false}
+  enforceDomain: ${OIDC_ENFORCE_DOMAIN:false}
+  users:
+    test:
+      password: "test"
+      sub: "test@oidc.app"
+      given_name: "test"
+      family_name: "test"
+      email: "test@oidc.app"
