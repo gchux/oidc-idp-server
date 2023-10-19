@@ -1,11 +1,15 @@
 FROM maven:3-eclipse-temurin-17-alpine as builder
 
+ARG JAR_NAME=oidc_idp_server
+
 COPY src /usr/src/app/src
 COPY pom.xml /usr/src/app
 
-RUN mvn -f /usr/src/app/pom.xml clean package
+RUN mvn -Doidc.idp.server.jar_name=${JAR_NAME} -f /usr/src/app/pom.xml clean package
 
 FROM openjdk:17-alpine
+
+ARG JAR_NAME=oidc_idp_server
 
 # ENV OIDC_DOMAIN oidc.app
 # ENV OIDC_ISSUER https://localhost
@@ -19,6 +23,6 @@ FROM openjdk:17-alpine
 # ENV OIDC_ALLOW_ALL true
 # ENV OIDC_ADD_ALL true
 
-COPY --from=builder /usr/src/app/target/oidc_server.jar /usr/app/app.jar
+COPY --from=builder /usr/src/app/target/${JAR_NAME}.jar /usr/app/app.jar
 
 ENTRYPOINT ["java", "-jar", "/usr/app/app.jar"]

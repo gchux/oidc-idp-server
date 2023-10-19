@@ -1,18 +1,18 @@
 runtime: java17 # or another supported runtime
-service: oidc-idp
+service: ${GAE_SERVICE}
 entrypoint: java -jar app.jar
 env_variables:
     OIDC_ALLOW_ALL: "true"
     OIDC_ADD_ALL: "true"
-    OIDC_DOMAIN: "oidc.app"
-    OIDC_ISSUER: "https://<gae-specific-endpoint>.appspot.com"
-    OIDC_CLIENT_ID: "oidc-test-knbu5"
-    OIDC_CLIENT_SECRET: "<a_strong_client_secret>"
-    OIDC_REDIRECTS: "https://<firebase_project_id>.firebaseapp.com/__/auth/handler"
+    OIDC_DOMAIN: "${OIDC_DOMAIN}"
+    OIDC_ISSUER: "https://${GAE_SERVICE}.appspot.com"
+    OIDC_CLIENT_ID: "${OIDC_CLIENT_ID}"
+    OIDC_CLIENT_SECRET: "${OIDC_CLIENT_SECRET}"
+    OIDC_REDIRECTS: "https://${GCP_PROJECT_ID}.firebaseapp.com/__/auth/handler"
     OIDC_ENFORCE_CLIENT_ID: "false"
     OIDC_ENFORCE_CLIENT_SECRET: "false"
     OIDC_ENFORCE_REDIRECT: "false"
     OIDC_ENFORCE_DOMAIN: "false"
 automatic_scaling:
-  target_cpu_utilization: 0.80
+  target_cpu_utilization: 0.95
   max_instances: 1

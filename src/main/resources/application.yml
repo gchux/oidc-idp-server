@@ -16,7 +16,7 @@ oidc:
   users:
     test:
       password: "test"
-      sub: "test@oidc.app"
+      sub: "test@${OIDC_DOMAIN:oidc.app}"
       given_name: "test"
       family_name: "test"
-      email: "test@oidc.app"
+      email: "test@${OIDC_DOMAIN:oidc.app}"
