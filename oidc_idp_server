@@ -1,37 +1,56 @@
 #!/bin/env bash
 
-APP_NAME='oidc-idp-server'
-JAR_NAME='oidc_idp_server'
-
 GUM_VERSION='0.11.0'
+TASK_VERSION='3.31.0'
 
-check_gum() {
-  if ! which gum > /dev/null; then
-    curl -sL https://github.com/charmbracelet/gum/releases/download/v${1}/gum_${1}_Linux_x86_64.tar.gz | tar -xz -C . gum
+check_install() {
+  if ! which "${1}" > /dev/null; then
+    curl -sL $2 | tar -vxz -C $(pwd)/bin/ $1
   else
-    rm -f gum
-    ln -s $(which gum) gum
+    ln -s $(which $1) ./bin/$1
   fi
 }
 
-check_gum ${GUM_VERSION}
+install_gum() {
+  check_install gum "https://github.com/charmbracelet/gum/releases/download/v${1}/gum_${1}_Linux_x86_64.tar.gz"
+}
 
-BUILD_TYPE=$(./gum choose --ordered --header="choose a build type" "Local" "Local+Docker" "GCP/Cloud Build")
+install_tasks() {
+  check_install task "https://github.com/go-task/task/releases/download/v${1}/task_linux_amd64.tar.gz"
+}
 
-rm -vf ./gae/app.*
+test -d $(pwd)/bin || mkdir -p $(pwd)/bin/
+
+install_gum ${GUM_VERSION}
+install_tasks ${TASK_VERSION}
+ln -s $(pwd)/bin/task $(pwd)/bin/tasks
+ln -s $(pwd)/mvnw $(pwd)/bin/mvnw
+
+export ORIGINAL_PATH=$PATH
+export PATH=$(pwd)/bin:$ORIGINAL_PATH
+
+OIDC_APP_NAME='oidc-idp-server'
+OIDC_JAR_NAME='oidc_idp_server'
+
+export GCP_PROJECT_ID=$(gum input --prompt="GCP Project ID: " --placeholder='ID of GCP Project used to host the GAE Service')
+export GAE_SERVICE=$(gum input --prompt="GAE Service Name: " --value="${OIDC_APP_NAME}" --placeholder='GAE Service used to deploy the OIDC server')
+export OIDC_DOMAIN=$(gum input --prompt="OIDC Domain ( email domain ): " --value="oidc.app" --placeholder='domain to be used for users email' )
+export OIDC_CLIENT_ID=$(gum input --prompt="OIDC Client ID: " --value="${OIDC_APP_NAME}" --placeholder='Client ID used by Identity Provider' )
+DEFAULT_OIDC_CLIENT_SECRET=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 128 | md5sum | tr -d ' \-\n')
+export OIDC_CLIENT_SECRET=$(gum input --prompt="OIDC Client Secret: " --value="${DEFAULT_OIDC_CLIENT_SECRET}" --placeholder='Client Secret used by Identity Provider')
+
+BUILD_TYPE=$(gum choose --ordered --header="choose a build type" "Local" "Local/Docker" "GCP/Cloud Build")
+
+TASK_VARS="OIDC_JAR_NAME=${OIDC_JAR_NAME} OIDC_APP_NAME=${OIDC_APP_NAME} GCP_PROJECT_ID=${GCP_PROJECT_ID}"
 
 case "${BUILD_TYPE}" in
   'Local')
-    ./mvnw -Doidc.idp.server.jar_name=${JAR_NAME} -f ./pom.xml clean package
-    cp -vf ./target/${JAR_NAME}.jar ./gae/app.jar
+    TASK_ID='local-deploy'
   ;;
    
-  'Local+Docker')
-    docker build --build-arg="JAR_NAME=${JAR_NAME}" -t ${APP_NAME} .
-    image_id=$(docker create ${APP_NAME})
-    docker cp ${image_id}:/usr/app/app.jar ./gae/app.jar
-    docker rm ${image_id}
-    docker image rm ${APP_NAM}
+  'Local/Docker')
+    TASK_ID='docker-deploy'
+    TASK_VARS="${TASK_VARS} DOCKER_FILE=$(pwd)/Dockerfile"
   ;;
    
   'GCP/Cloud Build')
@@ -41,26 +60,13 @@ case "${BUILD_TYPE}" in
 
 esac
 
-export GCP_PROJECT_ID=$(./gum input --prompt="GCP Project ID: " --placeholder='ID of GCP Project used to host the GAE Service')
-export GAE_SERVICE=$(./gum input --prompt="GAE Service Name: " --value="${APP_NAME}" --placeholder='GAE Service used to deploy the OIDC server')
-export OIDC_DOMAIN=$(./gum input --prompt="OIDC Domain ( email domain ): " --value="oidc.app" --placeholder='domain to be used for users email' )
-export OIDC_CLIENT_ID=$(./gum input --prompt="OIDC Client ID: " --value="${APP_NAME}" --placeholder='Client ID used by Identity Provider' )
-DEFAULT_OIDC_CLIENT_SECRET=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 128 | md5sum | tr -d ' \-\n')
-export OIDC_CLIENT_SECRET=$(./gum input --prompt="OIDC Client Secret: " --value="${DEFAULT_OIDC_CLIENT_SECRET}" --placeholder='Client Secret used by Identity Provider')
+$(pwd)/bin/task ${TASK_ID} ${TASK_VARS}
 
-envsubst < ./app_template.yaml > ./gae/app.yaml
-
-echo '--- <app.yaml> ---'
-cat -n ./gae/app.yaml
-echo '--- </app.yaml> ---'
-
-gcloud app deploy --project=${GCP_PROJECT_ID} --appyaml=./gae/app.yaml ./gae/
-
-unset GCP_PROJECT_ID
 unset GAE_SERVICE
 unset OIDC_DOMAIN
 unset OIDC_CLIENT_ID
 unset OIDC_CLIENT_SECRET
 
-rm -f ./gum
-rm -vf ./gae/app.*
+rm -rvf $(pwd)/bin
+
+export PATH=$ORIGINAL_PATH

@@ -1,0 +1,21 @@
+version: '3'
+
+includes:
+  maven:
+    taskfile: maven.yml
+    internal: true
+    dir: '{{.USER_WORKING_DIR}}'
+
+tasks:
+  clean:
+    cmds:
+      - task: maven:clean
+
+  build:
+    cmds:
+      - task: maven:package
+
+  install:
+    cmds:
+      - cp -vf target/{{.JAR_NAME}}.jar gae/app.jar
+

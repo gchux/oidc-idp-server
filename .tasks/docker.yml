@@ -1,0 +1,18 @@
+version: '3'
+
+tasks:
+  clean:
+    cmds:
+      - docker image rm -f {{.APP_NAME}}
+
+  build:
+    cmds:
+      - docker build -f {{.DOCKER_FILE}} -t {{.APP_NAME}} {{.USER_WORKING_DIR}}
+
+  install:
+    vars:
+      IMAGE_ID:
+        sh: 'docker create {{.APP_NAME}}'
+    cmds:
+      - docker cp '{{.IMAGE_ID}}:/usr/app/app.jar' '{{.USER_WORKING_DIR}}/gae/app.jar'
+      - docker rm {{.IMAGE_ID}}

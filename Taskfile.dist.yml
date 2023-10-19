@@ -1,0 +1,68 @@
+version: '3'
+
+includes:
+  local: 
+    dir: '{{.USER_WORKING_DIR}}'
+    taskfile: ./.tasks/local.yml
+    internal: true
+    vars:
+      JAR_NAME: '{{.OIDC_JAR_NAME | default "oidc_idp_server"}}'
+  docker: 
+    dir: '{{.USER_WORKING_DIR}}'
+    taskfile: ./.tasks/docker.yml
+    internal: true
+    vars:
+      APP_NAME: '{{.OIDC_APP_NAME | default "oidc-idp-server"}}'
+
+tasks:
+  clean:
+    cmds:
+      - rm -vf '{{.USER_WORKING_DIR}}/gae/app.*'
+
+  local-clean:
+    deps: [clean]
+    cmds:
+      - task: local:clean
+        
+  docker-clean:
+    deps: [clean]
+    cmds:
+      - task: docker:clean
+
+  local-build:
+    deps: [local-clean]
+    cmds:
+      - task: local:build
+
+  docker-build:
+    deps: [docker-clean]
+    cmds:
+      - task: docker:build
+
+  local-install:
+    deps: [local-build]
+    cmds:
+      - task: local:install
+
+  docker-install:
+    deps: [docker-build]
+    cmds:
+      - task: docker:install
+
+  deploy:
+    cmds:
+      - envsubst < '{{.USER_WORKING_DIR}}/app_template.yaml' > '{{.USER_WORKING_DIR}}/gae/app.yaml'
+      - cat -n '{{.USER_WORKING_DIR}}/gae/app.yaml'
+      - gcloud app deploy --verbosity=debug --project={{.GCP_PROJECT_ID}} --appyaml='{{.USER_WORKING_DIR}}/gae/app.yaml' '{{.USER_WORKING_DIR}}/gae/'
+    interactive: true
+
+  local-deploy:
+    deps: [local-install]
+    cmds:
+      - task: deploy
+
+  docker-deploy: 
+    deps: [docker-install]
+    cmds:
+      - task: deploy
+

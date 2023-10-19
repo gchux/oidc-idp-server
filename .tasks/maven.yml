@@ -1,0 +1,11 @@
+
+version: '3'
+
+tasks:
+  clean:
+    cmds:
+      - mvnw -f '{{.USER_WORKING_DIR}}/pom.xml' clean
+
+  package:
+    cmds:
+      - mvnw -Doidc.idp.server.jar_name={{.JAR_NAME}} -f '{{.USER_WORKING_DIR}}/pom.xml' package

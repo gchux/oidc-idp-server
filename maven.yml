@@ -1,0 +1,12 @@
+version: '3'
+
+tasks:
+  clean:
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - mvn -f pom.xml clean
+
+  package:
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - mvn -Doidc.idp.server.jar_name={{.JAR_NAME}} -f pom.xml package
