@@ -22,9 +22,11 @@ includes:
 
 tasks:
   clean:
+    vars:
+      GAE_FILES: app.yaml app.jar oidc_cloudbuild.yaml
     cmds:
-      - rm -vf '{{.USER_WORKING_DIR}}/gae/app.*'
-      - rm -vf '{{.USER_WORKING_DIR}}/gae/oidc_cloudbuild.yaml'
+      - for: { var: GAE_FILES }
+        cmd: rm -vf '{{.USER_WORKING_DIR}}/gae/{{.ITEM}}'
 
   local-clean:
     deps: [clean]
@@ -57,11 +59,8 @@ tasks:
       - task: docker:install
 
   create-gae-app-yaml:
-    preconditions:
-      - sh: '[ ! -f {{.USER_WORKING_DIR}}/gae/app.yaml ]'
-        msg: '"{{.USER_WORKING_DIR}}/gae/app.yaml" exists, not overriding'
     cmds:
-      - envsubst < '{{.USER_WORKING_DIR}}/templates/app.yaml' > '{{.USER_WORKING_DIR}}/gae/app.yaml'
+      - test -f '{{.USER_WORKING_DIR}}/gae/app.yaml' || envsubst < '{{.USER_WORKING_DIR}}/templates/app.yaml' > '{{.USER_WORKING_DIR}}/gae/app.yaml'
       - cat -n '{{.USER_WORKING_DIR}}/gae/app.yaml'
 
   deploy:
