@@ -18,7 +18,7 @@ learning, testing, and troubleshooting.
 
 ## Requirements
 
-1. Some flavor of `64bit Linux`
+1. some flavor of `64bit Linux`
 
 2. install `envsubst`:
 
