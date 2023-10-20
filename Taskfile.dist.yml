@@ -59,7 +59,7 @@ tasks:
   create-gae-app-yaml:
     internal: true
     proconditions:
-      - sh: '! test -f {{.USER_WORKING_DIR/gae/app.yaml}}'
+      - sh: '! test -f {{.USER_WORKING_DIR}}/gae/app.yaml'
         msg: '"app.yaml" exists, not creating a new one'
     cmds:
       - envsubst < '{{.USER_WORKING_DIR}}/templates/app.yaml' > '{{.USER_WORKING_DIR}}/gae/app.yaml'
