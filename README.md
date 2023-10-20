@@ -1,5 +1,9 @@
 ## AUTOMATED DEPLOYMENT
 
+  1. install Google Cloud SDK: <https://cloud.google.com/sdk/docs/install>
+
+  2. run the deployment script
+
     ```shell
     ./oidc_idp_server
     ```
