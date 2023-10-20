@@ -8,6 +8,10 @@ create_link() {
   test -L $2 || ln -s $1 $2
 }
 
+create_dir() {
+  test -d $1 || mkdir -p $1
+}
+
 check_install() {
   if ! which "${1}" > /dev/null; then
     curl -sL $2 | tar -vxz -C $(pwd)/bin/ $1
@@ -24,7 +28,8 @@ install_tool_from_gh() {
   $(pwd)/bin/task tools:install-from-gh "TOOL_NAME=$1" "TOOL_VERSION=$2" "TOOL_DL_URL=$3"
 }
 
-test -d $(pwd)/bin || mkdir -p $(pwd)/bin/
+create_dir "$(pwd)/bin"
+create_dir "$(pwd)/tmp"
 install_task ${TASK_VERSION}
 create_link $(pwd)/bin/task $(pwd)/bin/tasks
 create_link $(pwd)/mvnw $(pwd)/bin/mvnw
@@ -59,7 +64,7 @@ case "${BUILD_TYPE}" in
    
   'Local/Docker')
     export TASK_ID='docker-deploy'
-    TASK_VARS="${TASK_VARS} DOCKER_FILE=$(pwd)/Dockerfile"
+    export TASK_VARS="${TASK_VARS} DOCKER_FILE=$(pwd)/Dockerfile"
   ;;
    
   'GCP/Cloud Build')
@@ -70,10 +75,10 @@ esac
 
 $(pwd)/bin/task ${TASK_ID} ${TASK_VARS}
 
-unset TASK_TGZ
-unset TASK_VERSION
 unset TASK_ID
+unset TASK_TGZ
 unset TASK_VARS
+unset TASK_VERSION
 
 unset GCP_PROJECT_ID
 unset GAE_SERVICE
@@ -83,8 +88,5 @@ unset OIDC_APP_NAME
 unset OIDC_DOMAIN
 unset OIDC_CLIENT_ID
 unset OIDC_CLIENT_SECRET
-
-rm -vf $(pwd)/bin/task*
-rm -vf $(pwd)/bin/mvnw
 
 export PATH=$ORIGINAL_PATH

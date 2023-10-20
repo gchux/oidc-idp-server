@@ -21,7 +21,17 @@ includes:
       TOOLS_BIN_DIR: '{{.USER_WORKING_DIR}}/bin'
 
 tasks:
+  clean-all:
+    desc: same as `clean`, and also deletes all temp files and directories
+    vars:
+      TEMP_DIRS: bin tmp
+    cmds:
+      - task: clean
+      - for: { var: TEMP_DIRS }
+        cmd: rm -rvf '{{.USER_WORKING_DIR}}/{{.ITEM}}'
+
   clean:
+    desc: remove all dynamically created files at `gae/`
     vars:
       GAE_FILES: app.yaml app.jar oidc_cloudbuild.yaml
     cmds:
@@ -29,57 +39,68 @@ tasks:
         cmd: rm -vf '{{.USER_WORKING_DIR}}/gae/{{.ITEM}}'
 
   local-clean:
+    desc: same as `clean` plus all `maven` generated assets
     deps: [clean]
     cmds:
       - task: local:clean
         
   docker-clean:
+    desc: same as `clean` plus Docker generated image
     deps: [clean]
     cmds:
       - task: docker:clean
 
   local-build:
+    desc: runs `mvn package ...` locally ( requires JDK )
     deps: [local-clean]
     cmds:
       - task: local:build
 
   docker-build:
+    desc: runs `docker build ...` locally ( requires Docker, see `Dockerfile` )
     deps: [docker-clean]
     cmds:
       - task: docker:build
 
   local-install:
+    desc: promotes `oidc-idp-server` required assets from maven `target/` to `gae/`
     deps: [local-build]
     cmds:
       - task: local:install
 
   docker-install:
+    desc: extracts `oidc-idp-server` assets from the generated Docker image and promotes them into `gae/`
     deps: [docker-build]
     cmds:
       - task: docker:install
 
   create-gae-app-yaml:
+    internal: true
     cmds:
       - test -f '{{.USER_WORKING_DIR}}/gae/app.yaml' || envsubst < '{{.USER_WORKING_DIR}}/templates/app.yaml' > '{{.USER_WORKING_DIR}}/gae/app.yaml'
       - cat -n '{{.USER_WORKING_DIR}}/gae/app.yaml'
 
   deploy:
+    desc: deploys `oidc-idp-server` to GAE; any flavor of `*-install` must be completed first; see `templates/app.yaml`
     deps: [create-gae-app-yaml]
     cmds:
       - gcloud app deploy --quiet --verbosity=debug --project={{.GCP_PROJECT_ID}} --appyaml='{{.USER_WORKING_DIR}}/gae/app.yaml' '{{.USER_WORKING_DIR}}/gae/'
     interactive: true
 
   local-deploy:
+    desc: executes all required `local-*` tasks to deploy the `oidc-idp-server`
     deps: [local-install]
     cmds:
       - task: deploy
 
   docker-deploy: 
+    desc: executes all required `docker-*` tasks to deploy the `oidc-idp-server`
     deps: [docker-install]
     cmds:
       - task: deploy
 
   gcb-deploy:
+    desc: deploys the `oidc-idp-server` via Google Cloud Build; see `templates/cloudbuild.yaml`
     cmds:
       - task: clean
       - task: create-gae-app-yaml
