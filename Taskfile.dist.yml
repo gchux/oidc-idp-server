@@ -82,8 +82,9 @@ tasks:
       - task: deploy
 
   gcb-deploy:
-    deps: [clean, create-gae-app-yaml]
     cmds:
+      - task: clean
+      - task: create-gae-app-yaml
       - envsubst < '{{.USER_WORKING_DIR}}/templates/cloudbuild.yaml' > '{{.USER_WORKING_DIR}}/gae/oidc_cloudbuild.yaml'
       - cat -n '{{.USER_WORKING_DIR}}/gae/oidc_cloudbuild.yaml'
       - gcloud builds submit --config='{{.USER_WORKING_DIR}}/gae/oidc_cloudbuild.yaml' --dir='{{.USER_WORKING_DIR}}/gae/' '{{.USER_WORKING_DIR}}/gae/'
