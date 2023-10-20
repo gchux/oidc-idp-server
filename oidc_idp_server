@@ -1,36 +1,45 @@
 #!/bin/env bash
 
-GUM_VERSION='0.11.0'
-TASK_VERSION='3.31.0'
+export DOLLAR='$'
+export TASK_TGZ='task_linux_amd64.tar.gz'
+export TASK_VERSION='3.31.0'
+
+create_link() {
+  test -L $2 || ln -s $1 $2
+}
 
 check_install() {
   if ! which "${1}" > /dev/null; then
     curl -sL $2 | tar -vxz -C $(pwd)/bin/ $1
   else
-    ln -s $(which $1) ./bin/$1
+    create_link $(which $1) $(pwd)/bin/$1
   fi
 }
 
-install_gum() {
-  check_install gum "https://github.com/charmbracelet/gum/releases/download/v${1}/gum_${1}_Linux_x86_64.tar.gz"
+install_task() {
+  check_install 'task' "https://github.com/go-task/task/releases/download/v${1}/${TASK_TGZ}"
 }
 
-install_tasks() {
-  check_install task "https://github.com/go-task/task/releases/download/v${1}/task_linux_amd64.tar.gz"
+install_tool_from_gh() {
+  $(pwd)/bin/task tools:install-from-gh "TOOL_NAME=$1" "TOOL_VERSION=$2" "TOOL_DL_URL=$3"
 }
 
 test -d $(pwd)/bin || mkdir -p $(pwd)/bin/
-
-install_gum ${GUM_VERSION}
-install_tasks ${TASK_VERSION}
-ln -s $(pwd)/bin/task $(pwd)/bin/tasks
-ln -s $(pwd)/mvnw $(pwd)/bin/mvnw
+install_task ${TASK_VERSION}
+create_link $(pwd)/bin/task $(pwd)/bin/tasks
+create_link $(pwd)/mvnw $(pwd)/bin/mvnw
 
 export ORIGINAL_PATH=$PATH
 export PATH=$(pwd)/bin:$ORIGINAL_PATH
 
-OIDC_APP_NAME='oidc-idp-server'
-OIDC_JAR_NAME='oidc_idp_server'
+GUM_VERSION='0.11.0'
+GUM_DL_URL="https://github.com/charmbracelet/gum/releases/download/v${GUM_VERSION}/gum_${GUM_VERSION}_Linux_x86_64.tar.gz"
+install_tool_from_gh 'gum' "${GUM_VERSION}" "${GUM_DL_URL}"
+
+# export OIDC_GIT_REPO="$(git ls-remote --get-url origin | tr -d ' \n')"
+export OIDC_GIT_REPO='https://github.com/gchux/oidc-idp-server.git'
+export OIDC_APP_NAME='oidc-idp-server'
+export OIDC_JAR_NAME='oidc_idp_server'
 
 export GCP_PROJECT_ID=$(gum input --prompt="GCP Project ID: " --placeholder='ID of GCP Project used to host the GAE Service')
 export GAE_SERVICE=$(gum input --prompt="GAE Service Name: " --value="${OIDC_APP_NAME}" --placeholder='GAE Service used to deploy the OIDC server')
@@ -39,34 +48,43 @@ export OIDC_CLIENT_ID=$(gum input --prompt="OIDC Client ID: " --value="${OIDC_AP
 DEFAULT_OIDC_CLIENT_SECRET=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 128 | md5sum | tr -d ' \-\n')
 export OIDC_CLIENT_SECRET=$(gum input --prompt="OIDC Client Secret: " --value="${DEFAULT_OIDC_CLIENT_SECRET}" --placeholder='Client Secret used by Identity Provider')
 
-BUILD_TYPE=$(gum choose --ordered --header="choose a build type" "Local" "Local/Docker" "GCP/Cloud Build")
+export TASK_VARS="OIDC_JAR_NAME=${OIDC_JAR_NAME} OIDC_APP_NAME=${OIDC_APP_NAME} GCP_PROJECT_ID=${GCP_PROJECT_ID}"
 
-TASK_VARS="OIDC_JAR_NAME=${OIDC_JAR_NAME} OIDC_APP_NAME=${OIDC_APP_NAME} GCP_PROJECT_ID=${GCP_PROJECT_ID}"
+BUILD_TYPE=$(gum choose --ordered --header="choose a build type" "Local" "Local/Docker" "GCP/Cloud Build")
 
 case "${BUILD_TYPE}" in
   'Local')
-    TASK_ID='local-deploy'
+    export TASK_ID='local-deploy'
   ;;
    
   'Local/Docker')
-    TASK_ID='docker-deploy'
+    export TASK_ID='docker-deploy'
     TASK_VARS="${TASK_VARS} DOCKER_FILE=$(pwd)/Dockerfile"
   ;;
    
   'GCP/Cloud Build')
-    echo "not implemented"
-    exit 1
+    export TASK_ID='gcb-deploy'
   ;;
 
 esac
 
 $(pwd)/bin/task ${TASK_ID} ${TASK_VARS}
 
+unset TASK_TGZ
+unset TASK_VERSION
+unset TASK_ID
+unset TASK_VARS
+
+unset GCP_PROJECT_ID
 unset GAE_SERVICE
+unset OIDC_GIT_REPO
+unset OIDC_JAR_NAME
+unset OIDC_APP_NAME
 unset OIDC_DOMAIN
 unset OIDC_CLIENT_ID
 unset OIDC_CLIENT_SECRET
 
-rm -rvf $(pwd)/bin
+rm -vf $(pwd)/bin/task*
+rm -vf $(pwd)/bin/mvnw
 
 export PATH=$ORIGINAL_PATH

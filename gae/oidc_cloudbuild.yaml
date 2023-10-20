@@ -1,0 +1,41 @@
+steps:
+  - name: 'gcr.io/cloud-builders/git'
+    id: git-clone-oidc-server
+    script: |
+      git init
+      git remote add origin https://github.com/gchux/oidc-idp-server.git
+      git pull --depth=1 origin main
+  - name: 'gcr.io/cloud-builders/curl'
+    id: install-task-automation
+    script: |
+      curl -sL --remote-name https://github.com/go-task/task/releases/download/v3.31.0/task_linux_amd64.tar.gz
+      tar -vxz -C . -f task_linux_amd64.tar.gz task
+      rm -vf task_linux_amd64.tar.gz
+      mkdir bin/ 
+      ln -s $(pwd)/task $(pwd)/bin/task
+      ln -s $(pwd)/task $(pwd)/bin/tasks
+      ln -s $(pwd)/mvnw $(pwd)/bin/mvnw
+      ls -la .
+      ls -la .tasks/
+      ls -la bin/
+  - name: 'maven:3-eclipse-temurin-17-alpine'
+    id: build-oidc-server
+    script: |
+      export PATH=$(pwd)/bin:$PATH
+      ./task local-install OIDC_JAR_NAME=oidc_idp_server OIDC_APP_NAME=oidc-idp-server GCP_PROJECT_ID=chux-testing
+  - name: gcr.io/cloud-builders/gcloud
+    id: deploy-to-gae
+    script: |
+      ./bin/task deploy OIDC_JAR_NAME=oidc_idp_server OIDC_APP_NAME=oidc-idp-server GCP_PROJECT_ID=chux-testing
+options:
+  env:
+  - GCP_PROJECT_ID=chux-testing
+  - GAE_SERVICE=oidc-idp-server
+  - TASK_VERSION=3.31.0
+  - TASK_VARS=OIDC_JAR_NAME=oidc_idp_server OIDC_APP_NAME=oidc-idp-server GCP_PROJECT_ID=chux-testing
+  - OIDC_JAR_NAME=oidc_idp_server
+  - OIDC_APP_NAME=oidc-idp-server
+  - OIDC_DOMAIN=oidc.app
+  - OIDC_CLIENT_ID=oidc-idp-server
+  - OIDC_CLIENT_SECRET=4cae0337a4ee300b35a7fffe772728c2
+

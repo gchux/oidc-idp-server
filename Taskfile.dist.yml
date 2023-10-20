@@ -13,11 +13,18 @@ includes:
     internal: true
     vars:
       APP_NAME: '{{.OIDC_APP_NAME | default "oidc-idp-server"}}'
+  tools:
+    dir: '{{.USER_WORKING_DIR}}'
+    taskfile: ./.tasks/tools.yml
+    vars:
+      TOOLS_SANDBOX: 'tmp/tools'
+      TOOLS_BIN_DIR: '{{.USER_WORKING_DIR}}/bin'
 
 tasks:
   clean:
     cmds:
       - rm -vf '{{.USER_WORKING_DIR}}/gae/app.*'
+      - rm -vf '{{.USER_WORKING_DIR}}/gae/oidc_cloudbuild.yaml'
 
   local-clean:
     deps: [clean]
@@ -51,9 +58,9 @@ tasks:
 
   deploy:
     cmds:
-      - envsubst < '{{.USER_WORKING_DIR}}/app_template.yaml' > '{{.USER_WORKING_DIR}}/gae/app.yaml'
+      - envsubst < '{{.USER_WORKING_DIR}}/templates/app.yaml' > '{{.USER_WORKING_DIR}}/gae/app.yaml'
       - cat -n '{{.USER_WORKING_DIR}}/gae/app.yaml'
-      - gcloud app deploy --verbosity=debug --project={{.GCP_PROJECT_ID}} --appyaml='{{.USER_WORKING_DIR}}/gae/app.yaml' '{{.USER_WORKING_DIR}}/gae/'
+      - gcloud app deploy --quiet --verbosity=debug --project={{.GCP_PROJECT_ID}} --appyaml='{{.USER_WORKING_DIR}}/gae/app.yaml' '{{.USER_WORKING_DIR}}/gae/'
     interactive: true
 
   local-deploy:
@@ -65,4 +72,11 @@ tasks:
     deps: [docker-install]
     cmds:
       - task: deploy
+
+  gcb-deploy:
+    deps: [clean]
+    cmds:
+      - envsubst < '{{.USER_WORKING_DIR}}/templates/cloudbuild.yaml' > '{{.USER_WORKING_DIR}}/gae/oidc_cloudbuild.yaml'
+      - cat -n '{{.USER_WORKING_DIR}}/gae/oidc_cloudbuild.yaml'
+      - gcloud builds submit --config='{{.USER_WORKING_DIR}}/gae/oidc_cloudbuild.yaml' --dir='{{.USER_WORKING_DIR}}/gae/' '{{.USER_WORKING_DIR}}/gae/'
 
