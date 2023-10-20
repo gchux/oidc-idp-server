@@ -57,10 +57,9 @@ tasks:
       - task: docker:install
 
   create-gae-app-yaml:
-    internal: true
-    proconditions:
-      - sh: '! test -f {{.USER_WORKING_DIR}}/gae/app.yaml'
-        msg: '"app.yaml" exists, not creating a new one'
+    preconditions:
+      - sh: '[ ! -f {{.USER_WORKING_DIR}}/gae/app.yaml ]'
+        msg: '"{{.USER_WORKING_DIR}}/gae/app.yaml" exists, not overriding'
     cmds:
       - envsubst < '{{.USER_WORKING_DIR}}/templates/app.yaml' > '{{.USER_WORKING_DIR}}/gae/app.yaml'
       - cat -n '{{.USER_WORKING_DIR}}/gae/app.yaml'
