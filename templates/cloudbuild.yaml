@@ -16,7 +16,6 @@ steps:
       ln -s ${DOLLAR}(pwd)/task ${DOLLAR}(pwd)/bin/tasks
       ln -s ${DOLLAR}(pwd)/mvnw ${DOLLAR}(pwd)/bin/mvnw
       ls -la .
-      ls -la .tasks/
       ls -la bin/
       ls -la gae/
   - name: 'maven:3-eclipse-temurin-17-alpine'
@@ -24,10 +23,11 @@ steps:
     script: |
       export PATH=${DOLLAR}(pwd)/bin:${DOLLAR}PATH
       unset MAVEN_CONFIG
-      ./task local-install ${TASK_VARS}
+      task local-install ${TASK_VARS}
   - name: gcr.io/cloud-builders/gcloud
     id: deploy-to-gae
     script: |
+      mv -v app.yaml gae/
       ./bin/task deploy ${TASK_VARS}
 options:
   env:
