@@ -22,6 +22,7 @@ steps:
     id: build-oidc-server
     script: |
       export PATH=${DOLLAR}(pwd)/bin:${DOLLAR}PATH
+      unset MAVEN_CONFIG
       ./task local-install ${TASK_VARS}
   - name: gcr.io/cloud-builders/gcloud
     id: deploy-to-gae
