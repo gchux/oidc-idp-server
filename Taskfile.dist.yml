@@ -56,10 +56,18 @@ tasks:
     cmds:
       - task: docker:install
 
-  deploy:
+  create-gae-app-yaml:
+    internal: true
+    proconditions:
+      - sh: '! test -f {{.USER_WORKING_DIR/gae/app.yaml}}'
+        msg: '"app.yaml" exists, not creating a new one'
     cmds:
       - envsubst < '{{.USER_WORKING_DIR}}/templates/app.yaml' > '{{.USER_WORKING_DIR}}/gae/app.yaml'
       - cat -n '{{.USER_WORKING_DIR}}/gae/app.yaml'
+
+  deploy:
+    deps: [create-gae-app-yaml]
+    cmds:
       - gcloud app deploy --quiet --verbosity=debug --project={{.GCP_PROJECT_ID}} --appyaml='{{.USER_WORKING_DIR}}/gae/app.yaml' '{{.USER_WORKING_DIR}}/gae/'
     interactive: true
 
@@ -74,7 +82,7 @@ tasks:
       - task: deploy
 
   gcb-deploy:
-    deps: [clean]
+    deps: [clean, create-gae-app-yaml]
     cmds:
       - envsubst < '{{.USER_WORKING_DIR}}/templates/cloudbuild.yaml' > '{{.USER_WORKING_DIR}}/gae/oidc_cloudbuild.yaml'
       - cat -n '{{.USER_WORKING_DIR}}/gae/oidc_cloudbuild.yaml'
