@@ -18,11 +18,12 @@ learning, testing, and troubleshooting.
 
 ## Requirements
 
-1. install `envsubst`:
+1. Some flavor of `64bit Linux`
+
+2. install `envsubst`:
 
 ```shell
 # Debian based distros
-apt-get update
 apt-get install gettext-base
 
 # Alpine
@@ -36,11 +37,11 @@ yum install gettext
 dnf install gettext
 ```
 
-2. install Google Cloud SDK: <https://cloud.google.com/sdk/docs/install>
+3. install Google Cloud SDK: <https://cloud.google.com/sdk/docs/install>
 
-3. clone this repo: `git clone https://github.com/charmbracelet/gum.git`
+4. clone this repo: `git clone https://github.com/charmbracelet/gum.git`
 
-4. a billing enabled Google Cloud Platform Project to deploy it to App Engine
+5. a billing enabled Google Cloud Platform Project to deploy it to App Engine
   
   > App Engine ( and optionally Cloud Build ) is currently required; however, you could very easily host it elsewhere
 
