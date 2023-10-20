@@ -18,6 +18,7 @@ steps:
       ls -la .
       ls -la .tasks/
       ls -la bin/
+      ls -la gae/
   - name: 'maven:3-eclipse-temurin-17-alpine'
     id: build-oidc-server
     script: |
