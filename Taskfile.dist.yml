@@ -23,6 +23,8 @@ includes:
     internal: true
     vars:
       APP_NAME: '{{.OIDC_APP_NAME | default "oidc-idp-server"}}'
+  tools:
+    dir: '{{.USER_WORKING_DIR}}'
     taskfile: ./.tasks/tools.yml
 
 tasks:
