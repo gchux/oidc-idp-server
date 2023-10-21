@@ -1,5 +1,15 @@
 version: '3'
 
+vars:
+  GAE_DIR: '{{.USER_WORKING_DIR}}/gae'
+  TEMPLATES_DIR: '{{.USER_WORKING_DIR}}/templates'
+  GAE_YAML_TEMPLATE: '{{.TEMPLATES_DIR}}/app.yaml'
+  GCB_YAML_TEMPLATE: '{{.TEMPLATES_DIR}}/cloudbuild.yaml'
+  GCB_YAML: '{{.GAE_DIR}}/oidc_cloudbuild.yaml'
+  GAE_YAML: '{{.GAE_DIR}}/app.yaml'
+  TOOLS_SANDBOX: '{{.USER_WORKING_DIR}}/tmp/tools'
+  TOOLS_BIN_DIR: '{{.USER_WORKING_DIR}}/bin'
+
 includes:
   local: 
     dir: '{{.USER_WORKING_DIR}}'
@@ -13,12 +23,7 @@ includes:
     internal: true
     vars:
       APP_NAME: '{{.OIDC_APP_NAME | default "oidc-idp-server"}}'
-  tools:
-    dir: '{{.USER_WORKING_DIR}}'
     taskfile: ./.tasks/tools.yml
-    vars:
-      TOOLS_SANDBOX: 'tmp/tools'
-      TOOLS_BIN_DIR: '{{.USER_WORKING_DIR}}/bin'
 
 tasks:
   clean-all:
@@ -74,19 +79,6 @@ tasks:
     cmds:
       - task: docker:install
 
-  create-gae-app-yaml:
-    internal: true
-    cmds:
-      - test -f '{{.USER_WORKING_DIR}}/gae/app.yaml' || envsubst < '{{.USER_WORKING_DIR}}/templates/app.yaml' > '{{.USER_WORKING_DIR}}/gae/app.yaml'
-      - cat -n '{{.USER_WORKING_DIR}}/gae/app.yaml'
-
-  deploy:
-    desc: deploys `oidc-idp-server` to GAE; any flavor of `*-install` must be completed first; see `templates/app.yaml`
-    deps: [create-gae-app-yaml]
-    cmds:
-      - gcloud app deploy --quiet --verbosity=debug --project={{.GCP_PROJECT_ID}} --appyaml='{{.USER_WORKING_DIR}}/gae/app.yaml' '{{.USER_WORKING_DIR}}/gae/'
-    interactive: true
-
   local-deploy:
     desc: executes all required `local-*` tasks to deploy the `oidc-idp-server`
     deps: [local-install]
@@ -104,7 +96,19 @@ tasks:
     cmds:
       - task: clean
       - task: create-gae-app-yaml
-      - envsubst < '{{.USER_WORKING_DIR}}/templates/cloudbuild.yaml' > '{{.USER_WORKING_DIR}}/gae/oidc_cloudbuild.yaml'
-      - cat -n '{{.USER_WORKING_DIR}}/gae/oidc_cloudbuild.yaml'
-      - gcloud builds submit --config='{{.USER_WORKING_DIR}}/gae/oidc_cloudbuild.yaml' --dir='{{.USER_WORKING_DIR}}/gae/' '{{.USER_WORKING_DIR}}/gae/'
+      - envsubst < '{{.GCB_YAML_TEMPLATE}}' > '{{.GCB_YAML}}'
+      - cat -n '{{.GCB_YAML}}'
+      - gcloud builds submit --config='{{.GCB_YAML}}' --dir='{{.GAE_DIR}}/' '{{.GAE_DIR}}/'
 
+  create-gae-app-yaml:
+    internal: true
+    cmds:
+      - test -f '{{.GAE_YAML}}' || envsubst < '{{.GAE_YAML_TEMPLATE}}' > '{{.GAE_YAML}}'
+      - cat -n '{{.GAE_YAML}}'
+
+  deploy:
+    desc: deploys `oidc-idp-server` to GAE; any flavor of `*-install` must be completed first; see `templates/app.yaml`
+    deps: [create-gae-app-yaml]
+    cmds:
+      - gcloud app deploy --quiet --verbosity=debug --project={{.GCP_PROJECT_ID}} --appyaml='{{.GAE_YAML}}' '{{.GAE_DIR}}/'
+    interactive: true
