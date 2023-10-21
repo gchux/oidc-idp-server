@@ -1,42 +1,46 @@
 version: '3'
 
+vars:
+  TOOL_SANDBOX: '{{.TOOL_NAME}}__v{{.TOOL_VERSION}}'
+  TOOL_SANDBOX_DIR: '{{.TOOLS_SANDBOX}}/{{.TOOL_SANDBOX}}'
+  TOOL_SANDBOX_PATH: '{{.TOOLS_SANDBOX_PATH}}/{{.TOOL_SANDBOX}}'
+  TOOL_CMD_PATH: '{{.TOOL_SANDBOX_PATH}}/{{.TOOL_NAME}}'
+  TOOL_BIN_PATH: '{{.TOOLS_BIN_DIR}}/{{.TOOL_NAME}}'
+
 tasks:
   clean-all:
     vars:
       TOOLS: 
-        sh: 'ls {{.TOOLS_SANDBOX}}'
+        sh: 'ls {{.TOOLS_SANDBOX_PATH}}'
     cmds:
       - for: { var: TOOLS }
-        cmd: rm -rvf '{{.TOOLS_BIN_DIR}}/{{.ITEM}}'
-      - rm -rvf {{.TOOLS_SANDBOX}}
+        cmd: rm -rvf '{{.TOOLS_BIN_DIR}}/{{.ITEM | splitList "__v" | first}}'
+      - rm -rvf {{.TOOLS_SANDBOX_PATH}}
 
   clean:
     cmds:
-      - rm -rvf '{{.TOOLS_SANDBOX}}/{{.TOOL_NAME}}'
-      - rm -vf '{{.TOOLS_BIN_DIR}}/{{.TOOL_NAME}}'
+      - rm -rvf '{{.TOOL_SANDBOX_PATH}}'
+      - rm -vf '{{.TOOL_BIN_PATH}}'
 
   create-sandbox:
     internal: true
     requires:
       vars: [TOOLS_SANDBOX, TOOL_NAME]
     cmds:
-      - mkdir -p '{{.TOOLS_SANDBOX}}/{{.TOOL_NAME}}'
+      - mkdir -p '{{.TOOL_SANDBOX_PATH}}'
 
   install-from-gh:
-    dir: '{{.TOOL_SANDBOX}}'
+    dir: '{{.TOOL_SANDBOX_DIR}}'
     requires:
       vars: [TOOLS_SANDBOX, TOOLS_BIN_DIR, TOOL_NAME, TOOL_VERSION, TOOL_DL_URL]
     vars:
-      TOOL_SANDBOX: '{{.TOOLS_SANDBOX}}/{{.TOOL_NAME}}'
-      TOOL_CMD_PATH: '{{.USER_WORKING_DIR}}/{{.TOOL_SANDBOX}}/{{.TOOL_NAME}}'
-      TOOL_BIN_PATH: '{{.TOOLS_BIN_DIR}}/{{.TOOL_NAME}}'
       TOOL_DL_NAME: '{{.TOOL_DL_URL | splitList "/" | last}}'
     preconditions:
       - sh: '[ ! -f {{.TOOL_CMD_PATH}} ]'
-        msg: '"{{.TOOL_NAME}}" already installed'
+        msg: '"{{.TOOL_NAME}}@v{{.TOOL_VERSION}}" already installed'
     cmds:
       - task: clean
       - task: create-sandbox
       - curl -sL --remote-name {{.TOOL_DL_URL}}
-      - tar -xz -C . -f '{{.TOOL_DL_NAME}}'
+      - tar -xzf '{{.TOOL_DL_NAME}}'
       - ln -s '{{.TOOL_CMD_PATH}}' '{{.TOOL_BIN_PATH}}'

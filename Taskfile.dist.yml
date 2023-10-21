@@ -7,31 +7,29 @@ vars:
   GCB_YAML_TEMPLATE: '{{.TEMPLATES_DIR}}/cloudbuild.yaml'
   GCB_YAML: '{{.GAE_DIR}}/oidc_cloudbuild.yaml'
   GAE_YAML: '{{.GAE_DIR}}/app.yaml'
-  TOOLS_SANDBOX: '{{.USER_WORKING_DIR}}/tmp/tools'
+  TOOLS_SANDBOX: 'tmp/tools'
+  TOOLS_SANDBOX_PATH: '{{.USER_WORKING_DIR}}/tmp/tools'
   TOOLS_BIN_DIR: '{{.USER_WORKING_DIR}}/bin'
 
 includes:
   local: 
-    dir: '{{.USER_WORKING_DIR}}'
     taskfile: ./.tasks/local.yml
     internal: true
     vars:
       JAR_NAME: '{{.OIDC_JAR_NAME | default "oidc_idp_server"}}'
   docker: 
-    dir: '{{.USER_WORKING_DIR}}'
     taskfile: ./.tasks/docker.yml
     internal: true
     vars:
       APP_NAME: '{{.OIDC_APP_NAME | default "oidc-idp-server"}}'
   tools:
-    dir: '{{.USER_WORKING_DIR}}'
     taskfile: ./.tasks/tools.yml
 
 tasks:
   clean-all:
     desc: same as `clean`, and also deletes all temp files and directories
     vars:
-      TEMP_DIRS: bin tmp
+      TEMP_DIRS: bin tmp target
     cmds:
       - task: clean
       - for: { var: TEMP_DIRS }

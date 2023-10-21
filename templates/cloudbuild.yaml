@@ -16,8 +16,8 @@ steps:
       ln -s ${DOLLAR}(pwd)/task ${DOLLAR}(pwd)/bin/tasks
       ln -s ${DOLLAR}(pwd)/mvnw ${DOLLAR}(pwd)/bin/mvnw
       ls -la .
-      ls -la bin/
       ls -la gae/
+      ls -la bin/
   - name: 'maven:3-eclipse-temurin-17-alpine'
     id: build-oidc-server
     script: |
@@ -27,7 +27,7 @@ steps:
   - name: gcr.io/cloud-builders/gcloud
     id: deploy-to-gae
     script: |
-      mv -v app.yaml gae/
+      mv -v app.yaml gae/app.yaml
       ./bin/task deploy ${TASK_VARS}
 options:
   env:

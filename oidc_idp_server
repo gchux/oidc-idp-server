@@ -29,7 +29,7 @@ install_tool_from_gh() {
 }
 
 create_dir "$(pwd)/bin"
-create_dir "$(pwd)/tmp"
+create_dir "$(pwd)/tmp/tools"
 install_task ${TASK_VERSION}
 create_link $(pwd)/bin/task $(pwd)/bin/tasks
 create_link $(pwd)/mvnw $(pwd)/bin/mvnw
