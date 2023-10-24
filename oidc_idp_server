@@ -43,9 +43,11 @@ install_tool_from_gh 'gum' "${GUM_VERSION}" "${GUM_DL_URL}"
 
 # export OIDC_GIT_REPO="$(git ls-remote --get-url origin | tr -d ' \n')"
 export OIDC_GIT_REPO='https://github.com/gchux/oidc-idp-server.git'
+export OIDC_GIT_BRANCH='main'
 export OIDC_APP_NAME='oidc-idp-server'
 export OIDC_JAR_NAME='oidc_idp_server'
 
+export OIDC_GIT_BRANCH=$(gum input --prompt="GIT branch: " --value="${OIDC_GIT_BRANCH}" --placeholder='specify which branch to build and deploy')
 export GCP_PROJECT_ID=$(gum input --prompt="GCP Project ID: " --placeholder='ID of GCP Project used to host the GAE Service')
 export FIREBASE_PROJECT_ID=$(gum input --prompt="Firebase Project ID: " --value="${GCP_PROJECT_ID}" --placeholder='ID of the Firebase Project used to host the webapp')
 export GAE_SERVICE=$(gum input --prompt="GAE Service Name: " --value="${OIDC_APP_NAME}" --placeholder='GAE Service used to deploy the OIDC server')
@@ -85,6 +87,7 @@ unset GCP_PROJECT_ID
 unset FIREBASE_PROJECT_ID
 unset GAE_SERVICE
 unset OIDC_GIT_REPO
+unset OIDC_GIT_BRANCH
 unset OIDC_JAR_NAME
 unset OIDC_APP_NAME
 unset OIDC_DOMAIN

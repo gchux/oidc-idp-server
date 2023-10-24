@@ -4,7 +4,7 @@ steps:
     script: |
       git init
       git remote add origin ${OIDC_GIT_REPO}
-      git pull --depth=1 origin main
+      git pull --depth=1 origin '${OIDC_GIT_BRANCH}'
   - name: 'gcr.io/cloud-builders/curl'
     id: install-task-automation
     script: |

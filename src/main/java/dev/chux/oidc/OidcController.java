@@ -115,6 +115,11 @@ public class OidcController {
         m.put("id_token_signing_alg_values_supported", Arrays.asList("RS256")); // REQUIRED
         m.put("claims_supported", Arrays.asList("sub", "iss", "name", "family_name", "given_name", "preferred_username", "email"));
         m.put("code_challenge_methods_supported", Arrays.asList("RS256")); // PKCE support advertised
+        
+        m.put("token_endpoint_auth_methods_supported", Arrays.asList("client_secret_post", "client_secret_basic"));
+        // m.put("token_endpoint_auth_methods_supported", Arrays.asList("client_secret_basic"));
+        // m.put("token_endpoint_auth_methods_supported", Arrays.asList("client_secret_post"));
+        
         return ResponseEntity.ok().body(m);
     }
 
@@ -176,6 +181,7 @@ public class OidcController {
     public ResponseEntity<?> introspection(@RequestParam String token,
                                            @RequestHeader("Authorization") String auth,
                                            @RequestParam(required = false) String client_id,
+                                           @RequestParam(required = false) String client_secret,
                                            HttpServletRequest req) {
         StringBuilder requestURL = new StringBuilder(req.getRequestURL().toString());
         String queryString = req.getQueryString();
@@ -186,7 +192,7 @@ public class OidcController {
             URL = requestURL.append('?').append(queryString).toString();
         }
         log.info("called " + INTROSPECTION_ENDPOINT + " auth={} client_id={} token={} URL={}", auth, client_id, token, URL);
-        final ClientInfo clientInfo = clientAuth(auth);
+        final ClientInfo clientInfo = clientAuth(auth, client_id, client_secret);
         log.info("client_info={}", clientInfo);
         Map<String, Object> m = new LinkedHashMap<>();
         AccessTokenInfo accessTokenInfo = accessTokens.get(token);
@@ -230,8 +236,10 @@ public class OidcController {
         } else {
             URL = requestURL.append('?').append(queryString).toString();
         }
-        log.info("called " + TOKEN_ENDPOINT + ", grant_type={} code={} redirect_uri={} URL={}", grant_type, code, redirect_uri, URL);
-        final ClientInfo clientInfo = clientAuth(auth);
+        log.info("called " + TOKEN_ENDPOINT + 
+                ", grant_type={} code={} redirect_uri={} client_id={} client_secret={} authz_hdr={} URL={}", 
+                grant_type, code, redirect_uri, client_id, client_secret, auth, URL);
+        final ClientInfo clientInfo = clientAuth(auth, client_id, client_secret);
         log.info("enforce_client_id={} enforce_client_secret={} client_info={}", 
             serverProperties.getEnforceClientId(), serverProperties.getEnforceSecret(), clientInfo);
         if( clientInfo != null && !clientInfo.isValid() ) {
@@ -487,11 +495,14 @@ public class OidcController {
         return myToken.serialize();
     }
 
-    private ClientInfo clientAuth(final String auth) {
-        if( auth == null ) { return null; } 
-        log.info("client auth: header={}", auth);
-        final String credential = auth.substring(6);
-        final String[] credentials = new String(Base64.getDecoder().decode(credential), StandardCharsets.UTF_8).split(":");
+    private ClientInfo clientAuth(final String auth, final String clientId, final String clientSecret) {
+        if( ( auth == null || auth.isEmpty() ) &&
+                ( ( clientId == null || clientId.isEmpty() )
+                  && ( clientSecret == null || clientSecret.isEmpty() ) )
+            ) { return null; } 
+        log.info("client auth: header={} client_id={} client_secret={}", auth, clientId, clientSecret);
+        final String credential = ( auth != null )? auth.substring(6) : ( clientId + ":" + clientSecret );
+        final String[] credentials = ( auth != null )? fromAuth(credential) : new String[]{ clientId, clientSecret };
         final String client_id = credentials[0];
         final String client_secret = credentials[1];
         if( (serverProperties.getEnforceClientId() && !serverProperties.getClientId().equals(client_id))
@@ -499,6 +510,10 @@ public class OidcController {
           return new ClientInfo(credential, client_id, client_secret, false);
         }
         return new ClientInfo(credential, client_id, client_secret, true);
+    }
+
+    private String[] fromAuth(final String credential) {
+        return new String(Base64.getDecoder().decode(credential), StandardCharsets.UTF_8).split(":");
     }
 
     private static String urlencode(String s) {
