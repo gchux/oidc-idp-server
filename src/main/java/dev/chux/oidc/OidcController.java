@@ -228,6 +228,13 @@ public class OidcController {
                                    @RequestHeader(name = "Authorization", required = false) String auth,
                                    UriComponentsBuilder uriBuilder,
                                    HttpServletRequest req) throws NoSuchAlgorithmException, JOSEException {
+
+        try {
+            Thread.sleep(15_000);
+        } catch(Exception e) {
+            e.printStackTrace(System.out);
+        }
+
         StringBuilder requestURL = new StringBuilder(req.getRequestURL().toString());
         String queryString = req.getQueryString();
         String URL;
