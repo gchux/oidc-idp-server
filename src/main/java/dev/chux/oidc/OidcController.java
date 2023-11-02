@@ -131,7 +131,8 @@ public class OidcController {
     public ResponseEntity<String> jwks(HttpServletRequest req) {
         log.info("called {}", JWKS_ENDPOINT);
         final String jwks = publicJWKSet.toString();
-        return ResponseEntity.ok().body(jwks);
+        // return ResponseEntity.ok().body(jwks);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("KO");
     }
 
     /**
