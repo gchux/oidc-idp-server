@@ -1,4 +1,4 @@
-package dev.chux.oidc;
+package dev.chux.idp.oidc;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;

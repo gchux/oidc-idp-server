@@ -1,0 +1,39 @@
+"Bazel dependencies"
+
+module(
+    name = "chux",
+    repo_name = "chux",
+)
+
+bazel_dep(name = "bazel_skylib", version = "1.5.0")
+bazel_dep(name = "rules_jvm_external", version = "5.3")
+
+non_module_dependencies = use_extension("//:extensions.bzl", "non_module_dependencies")
+use_repo(non_module_dependencies, "rules_spring")
+
+maven = use_extension("@rules_jvm_external//:extensions.bzl", "maven")
+maven.install(
+  artifacts = [
+    "javax.annotation:javax.annotation-api:jar:1.3.2",
+    "com.nimbusds:nimbus-jose-jwt:9.16.1",
+    "org.springframework.boot:spring-boot-starter:2.6.3",
+    "org.springframework.boot:spring-boot-starter-web:2.6.3",
+    # "org.springframework.boot:spring-boot-starter-tomcat:2.6.3",
+    "org.springframework.boot:spring-boot-starter-jetty:2.6.3",
+    "org.springframework.boot:spring-boot-starter-logging:2.6.3",
+    "org.springframework.boot:spring-boot-configuration-processor:2.6.3",
+    "org.springframework.boot:spring-boot-loader:2.6.3",
+    "org.springframework.boot:spring-boot-loader-tools:2.6.3",
+    "org.springframework.boot:spring-boot-actuator:2.6.3",
+    "org.springframework.boot:spring-boot-actuator-autoconfigure:2.6.3",
+  ],
+  fetch_sources = False,
+  repositories = [
+    "https://repo1.maven.org/maven2",
+    "https://jcenter.bintray.com/",
+  ],
+  excluded_artifacts = [
+    "org.springframework.boot:spring-boot-starter-tomcat",
+  ],
+)
+use_repo(maven, "maven")
