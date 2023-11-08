@@ -1,8 +1,8 @@
 "Bazel dependencies"
 
 module(
-    name = "chux",
-    repo_name = "chux",
+    name = "oidc-idp-server",
+    repo_name = "oidc_idp_server",
 )
 
 bazel_dep(name = "bazel_skylib", version = "1.5.0")
