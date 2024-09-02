@@ -1,4 +1,4 @@
-package dev.chux.oidc;
+package dev.chux.idp.oidc;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;

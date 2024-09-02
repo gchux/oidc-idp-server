@@ -1,4 +1,4 @@
-package dev.chux.oidc;
+package dev.chux.idp.oidc;
 
 public class User {
     private String logname;
