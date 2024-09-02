@@ -453,6 +453,7 @@ public class OidcController {
                 .claim("family_name", user.getFamily_name())
                 .claim("given_name", user.getGiven_name())
                 .claim("preferred_username", user.getPreferred_username())
+                .claim("group", Collections.singletonList("test"))
                 .build();
         // create JWT token
         SignedJWT jwt = new SignedJWT(jwsHeader, jwtClaimsSet);
@@ -478,7 +479,7 @@ public class OidcController {
                 .audience(client_id)
                 .issueTime(new Date())
                 .expirationTime(new Date(System.currentTimeMillis() + serverProperties.getTokenExpirationSeconds() * 1000L))
-               .jwtID(UUID.randomUUID().toString())
+                .jwtID(UUID.randomUUID().toString())
                 .claim("nonce", nonce)
                 .claim("at_hash", encodedHash)
                 .claim("name", user.getName())
@@ -487,6 +488,7 @@ public class OidcController {
                 .claim("family_name", user.getFamily_name())
                 .claim("given_name", user.getGiven_name())
                 .claim("preferred_username", user.getPreferred_username())
+                .claim("group", Collections.singletonList("test"))
                 .build();
         // create JWT token
         SignedJWT myToken = new SignedJWT(jwsHeader, jwtClaimsSet);
