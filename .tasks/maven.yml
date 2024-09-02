@@ -1,11 +1,10 @@
-
-version: '3'
+version: "3"
 
 tasks:
   clean:
     cmds:
-      - mvnw -Doidc.idp.server.jar_name={{.JAR_NAME}} -f '{{.USER_WORKING_DIR}}/pom.xml' -B --no-transfer-progress clean
+      - '{{.USER_WORKING_DIR}}/mvnw -Doidc.idp.server.jar_name={{.JAR_NAME}} -f "{{.USER_WORKING_DIR}}/pom.xml" -B --no-transfer-progress clean'
 
   package:
     cmds:
-      - mvnw -Doidc.idp.server.jar_name={{.JAR_NAME}} -f '{{.USER_WORKING_DIR}}/pom.xml' -B --no-transfer-progress package
+      - '{{.USER_WORKING_DIR}}/mvnw -Doidc.idp.server.jar_name={{.JAR_NAME}} -f "{{.USER_WORKING_DIR}}/pom.xml" -B --no-transfer-progress package'

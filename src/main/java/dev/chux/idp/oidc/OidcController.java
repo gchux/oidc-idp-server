@@ -82,10 +82,10 @@ public class OidcController {
 
     @PostConstruct
     public void init() throws IOException, ParseException, JOSEException {
-        log.info("initializing JWK");
         JWKSet jwkSet = JWKSet.load(getClass().getResourceAsStream("/jwks.json"));
         JWK key = jwkSet.getKeys().get(0);
-        signer = new RSASSASigner((RSAKey) key);
+        log.info("initializing JWK: {} | iat: {} | exp: {} } x509: {}", key.getKeyID(), key.getIssueTime(), key.getExpirationTime(), key.getParsedX509CertChain());
+        this.signer = new RSASSASigner((RSAKey) key);
         publicJWKSet = jwkSet.toPublicJWKSet();
         jwsHeader = new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(key.getKeyID()).build();
         log.info("config {}", serverProperties);
